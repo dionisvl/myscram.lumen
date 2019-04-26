@@ -11,7 +11,7 @@ class Users extends Model
 
 
     protected $fillable = [
-        'user_login', 'user_password', 'user_hash', 'user_ip'
+        'user_login', 'user_password', 'user_hash', 'user_ip', 'server_nonce'
     ];
 
     public static function add($fields)
