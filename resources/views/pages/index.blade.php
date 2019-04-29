@@ -143,7 +143,8 @@
                                         try {
                                             let data = JSON.parse(response);
                                             if (data['status'] === true) {
-                                                msg.innerHTML = '';
+                                                //msg.innerHTML = '';
+                                                msg.append('\n\n');
                                                 msg.append(data['msg']);
                                             } else {
                                                 msg.innerHTML = '';
@@ -201,7 +202,9 @@
                         });
 
                         function check_auth_fast(server_nonce,password) {
+
                             let msg = document.getElementById('check_auth_msg');
+                            msg.innerHTML = '';
                             //$client_proof = hash('sha256',$password,true) ^ hash('sha256',$server_nonce.hash('sha256',hash('sha256',$password,true)));
                             let client_proof = strXor(sha256(password), sha256(server_nonce + sha256(sha256(password))));
 
