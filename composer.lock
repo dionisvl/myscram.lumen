@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "410b1de0dbf511850cf1cbe47ee437b6",
+    "content-hash": "572c0d8642be3445b445ef20a528589d",
     "packages": [
         {
             "name": "barryvdh/laravel-ide-helper",
@@ -1599,7 +1599,7 @@
         },
         {
             "name": "illuminate/session",
-            "version": "v5.8.12",
+            "version": "v5.8.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/session.git",

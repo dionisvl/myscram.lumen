@@ -8,6 +8,7 @@
         "php": ">=7.1.3",
         "barryvdh/laravel-ide-helper": "^2.6",
         "fabiang/sasl": "^1.0",
+        "illuminate/session": "^5.8",
         "laravel/lumen-framework": "5.8.*",
         "vlucas/phpdotenv": "^3.3"
     },

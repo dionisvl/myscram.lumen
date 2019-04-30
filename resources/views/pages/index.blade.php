@@ -148,7 +148,7 @@
                                             //     .attr('value', client_proof)
                                             //     .appendTo(t);
 
-                                            form_data = form_data+'&client_proof='+client_proof;//получим свежую form_data с client_proof-ом
+                                            form_data = form_data+'&client_proof='+btoa(client_proof);//получим свежую form_data с client_proof-ом
 
                                             check_auth(form_data,server_nonce,msg,action);
                                         } else {
@@ -176,7 +176,7 @@
                                                 msg.append('\n\n');
                                                 msg.append(data['msg']);
                                             } else {
-                                                msg.innerHTML = '';
+
                                                 msg.append(data['msg']);
                                                 console.log(response);
                                             }
@@ -246,7 +246,7 @@
                             $.ajax({
                                 type: "POST",
                                 url: '/scram/verifyNonce',
-                                data: { client_proof: client_proof },
+                                data: { client_proof: btoa(client_proof) },
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);
@@ -255,8 +255,7 @@
                                             msg.append(data['msg']);
 
                                         } else {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg'])
+                                            msg.append(data['msg']);
                                             console.log(response);
                                         }
                                     } catch (e) {

@@ -12,13 +12,17 @@ use App\Users;
  *  - сервер делает проверку авторизации на основе snonse и client_proof и отдает клинту ответ о результате проверки
  *
  *  ps:  snonse генерируется на сервере, сохраняется в бд и удаляется сразу после попытки авторизации
+ *  ps2: client_proof передаем в base64 поскольку это бинарные данные и было замечено что
+ * при передаче в сыром виде случаются ошибки
+ *
+ *
  * Class ScramController
  * @package App\Http\Controllers
  */
 class ScramController extends Controller
 {
     private $favoriteAlgo = 'sha512';
-    private $favoriteEncrypt = 'openssl';//hash
+    private $favoriteEncrypt = 'hash';//hash
 
     /**
      * @return string
@@ -106,7 +110,7 @@ class ScramController extends Controller
             $server_nonce = $server_nonce->nonce;
 
 
-            $client_proof = $data['client_proof'];
+            $client_proof = base64_decode($data['client_proof']);
 
             /**
             ($a ^ $b) ^ $b = $a;
@@ -144,7 +148,8 @@ class ScramController extends Controller
             if ($stored_key === $sha_sha_password) {
                 return json_encode(['status' => true, 'msg' => 'authorize ok! Your login: ' . $user_login], JSON_UNESCAPED_UNICODE);
             } else {
-                return json_encode(['status' => false, 'msg' => 'error. $sha_sha_password:' . $sha_sha_password. ' $sha_password:' . $sha_password], JSON_UNESCAPED_UNICODE);
+
+                return json_encode(['status' => false, 'msg' => 'error. $sha_sha_password:' . $sha_sha_password. ' $stored_key:' . $stored_key], JSON_UNESCAPED_UNICODE);
             }
         } else {
             return json_encode(['status' => false, 'msg' => "отправьте сюда client_proof в get или post"], JSON_UNESCAPED_UNICODE);
@@ -159,17 +164,13 @@ class ScramController extends Controller
         }
         if ($user_login != 'test_login') {
             $user = Users::where('user_login', $user_login)->first();
-
             if (!empty($user)) {
                 $stored_key = $user->user_password;
                 if ($this->compute($this->compute($data['user_password']))!=$stored_key){
                     return json_encode(['status' => false, 'msg' => 'Не верный логин'], JSON_UNESCAPED_UNICODE);
                 }
                 if (empty($user->server_nonce)) {
-                    //$user = New Users;
-                    //$user->user_login = $user_login;
-                    //$user->user_password = $data['user_password'];
-                    $server_nonce = hash('sha256', $this->makeRandomString());
+                    $server_nonce = $this->makeRandomString();
                     $user->server_nonce = $server_nonce;
                     $user->save();
                     return json_encode(['status' => true, 'msg' => 'new nonce created, for $user_login= ' . $user_login, 'nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
@@ -185,14 +186,15 @@ class ScramController extends Controller
         }
     }
 
-    private function makeRandomString($bits = 256)
+    private function makeRandomString($length = 10)
     {
-        $bytes = ceil($bits / 8);
-        $return = '';
-        for ($i = 0; $i < $bytes; $i++) {
-            $return .= chr(mt_rand(0, 255));
+        $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $numChars = strlen($chars);
+        $string = '';
+        for ($i = 0; $i < $length; $i++) {
+            $string .= substr($chars, random_int(1, $numChars) - 1, 1);
         }
-        return $return;
+        return $string;
     }
 
     private function removeNonce($user_login = 'test_login')
@@ -201,6 +203,7 @@ class ScramController extends Controller
             $user = Users::where('user_login', $user_login)->first();
             $user->server_nonce = '';
             $user->save();
+
             return true;
     }
 
