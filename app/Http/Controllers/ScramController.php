@@ -17,6 +17,25 @@ use App\Users;
  */
 class ScramController extends Controller
 {
+    private $favoriteAlgo = 'sha512';
+    private $favoriteEncrypt = 'openssl';//hash
+
+    /**
+     * @return string
+     */
+    public function getFavoriteAlgo(): string
+    {
+        return $this->favoriteAlgo;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFavoriteEncrypt(): string
+    {
+        return $this->favoriteEncrypt;
+    }
+
     /**
      * UserController constructor.
      */
@@ -37,7 +56,7 @@ class ScramController extends Controller
             $login = $data['user_login'];
             $err = '';
             // проверям логин
-            if (!preg_match("/^[a-zA-Z0-9]+$/", $login)) {
+            if (!preg_match("/^[a-zA-Z0-9_]+$/", $login)) {
                 $err = "Логин может состоять только из букв английского алфавита и цифр";
             }
             if (strlen($login) < 3 or strlen($login) > 30) {
@@ -51,7 +70,7 @@ class ScramController extends Controller
             $user = new Users;
 
             $user->user_login = $login;
-            $hashed_password = hash('sha256',hash('sha256', $data['user_password']));
+            $hashed_password = $this->compute($this->compute($data['user_password']));
             $user->user_password = $hashed_password;
             $user->save();
 
@@ -92,22 +111,40 @@ class ScramController extends Controller
             /**
             ($a ^ $b) ^ $b = $a;
             $a = ($a ^ $b) ^ $b
-
-             * 1 a^b=c
-             * 2 c^b=a
-             * 3 c^a=b
-             * 4 b=c^a
              */
-//            $testHash = ($client_proof ^ hash('sha256', $server_nonce . $stored_key)) ^ hash('sha256', $server_nonce . $stored_key); //old
-            $sha_password = hash('sha256', $server_nonce . $stored_key) ^ $client_proof;
-            $testHash = $sha_password ^ hash('sha256', $server_nonce . $stored_key);
+
+            /*
+             * client_proof = sha (p) XOR sha( s_nonce . sha(sha(p)))
+             *
+             * - Получим левую часть уравнения (sha(p))
+             * - извелечем хеш еще раз
+             * - сравним с хранимым значением в БД (sha(sha(p)) ($stored_key === $sha_sha_password)
+             */
+            $sha_password = $this->compute( $server_nonce . $stored_key) ^ $client_proof;
+
+            $sha_sha_password = $this->compute($sha_password);
+
+//            var_dump('-------------------------------------------------------------------');
+//            var_dump('right_part: ' . openssl_digest($server_nonce . $stored_key,'sha512'));
+//            var_dump('$client_proof: ' . $client_proof);
+//            var_dump('$client_proof B64: ' . base64_encode($client_proof));
+//            var_dump('$server_nonce:'.$server_nonce);
+//
+//            var_dump('$sha_password:'.$sha_password);
+//            var_dump('$sha_sha_password:'.$sha_sha_password);
+//            var_dump('$stored_key: ' . $stored_key);
+//            var_dump('-********************************************************************-');
+//            print_r('-********************************************************************-');
+//            die();
+
+
 
             $this->removeNonce($user_login); //удалим нонс чтобы не использовался снова
 
-            if ($testHash == $client_proof) {
+            if ($stored_key === $sha_sha_password) {
                 return json_encode(['status' => true, 'msg' => 'authorize ok! Your login: ' . $user_login], JSON_UNESCAPED_UNICODE);
             } else {
-                return json_encode(['status' => false, 'msg' => 'error. $testHash:' . $testHash. ' $client_proof:' . $client_proof], JSON_UNESCAPED_UNICODE);
+                return json_encode(['status' => false, 'msg' => 'error. $sha_sha_password:' . $sha_sha_password. ' $sha_password:' . $sha_password], JSON_UNESCAPED_UNICODE);
             }
         } else {
             return json_encode(['status' => false, 'msg' => "отправьте сюда client_proof в get или post"], JSON_UNESCAPED_UNICODE);
@@ -125,7 +162,7 @@ class ScramController extends Controller
 
             if (!empty($user)) {
                 $stored_key = $user->user_password;
-                if (hash('sha256',hash('sha256',$data['user_password']))!=$stored_key){
+                if ($this->compute($this->compute($data['user_password']))!=$stored_key){
                     return json_encode(['status' => false, 'msg' => 'Не верный логин'], JSON_UNESCAPED_UNICODE);
                 }
                 if (empty($user->server_nonce)) {
@@ -143,12 +180,12 @@ class ScramController extends Controller
 
 
         } else {
-            $server_nonce = 'our_secret_nonce_from_php_server: ' . hash('sha256', $this->makeRandomString());
+            $server_nonce = 'our_secret_nonce_from_php_server';
             return json_encode(['status' => true, 'msg' => 'ok, $user_login= ' . $user_login, 'nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
         }
     }
 
-    public function makeRandomString($bits = 256)
+    private function makeRandomString($bits = 256)
     {
         $bytes = ceil($bits / 8);
         $return = '';
@@ -158,17 +195,24 @@ class ScramController extends Controller
         return $return;
     }
 
-    public function removeNonce($user_login = 'test_login')
+    private function removeNonce($user_login = 'test_login')
     {
         //тут мы удаляем серверный нонс из БД или из сессии, не важно
-        if ($user_login === 'test_login') {
             $user = Users::where('user_login', $user_login)->first();
             $user->server_nonce = '';
             $user->save();
             return true;
-        }
-        return true;
     }
 
-
+    private function compute($data)
+    {
+        $algo = $this->getFavoriteAlgo();
+        switch ($this->getFavoriteEncrypt()) {
+            case 'openssl':
+                return openssl_digest($data, $algo);
+            case 'hash':
+                return hash($algo,  $data);
+        }
+        throw new \RuntimeException('No hash function on this platform');
+    }
 }
