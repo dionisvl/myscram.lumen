@@ -18,6 +18,7 @@
 
                     <h3>Регистрация</h3>
                     <form action="/scram/register" class="js_register">
+                        {{ csrf_field() }}
                         <input type="hidden" value="register" name="form_type">
                         <input type="text" placeholder="your login" name="user_login" >
                         <input type="text" placeholder="your password" name="user_password">
@@ -36,6 +37,7 @@
 */?>
                     <h3>Авторизация</h3>
                     <form action="/scram/verifyNonce" class="js_auth">
+                        {{ csrf_field() }}
                         <input type="hidden" value="auth" name="form_type">
                         <input type="text" placeholder="your login" name="user_login" >
                         <input type="text" placeholder="your password" name="user_password">
@@ -211,7 +213,7 @@
                             $.ajax({
                                 type: "POST",
                                 url: '/scram/getnonce',
-                                data: { user_login: user_login },
+                                data: { user_login: user_login, "_token": "{{ csrf_token() }}"},
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);
@@ -246,7 +248,7 @@
                             $.ajax({
                                 type: "POST",
                                 url: '/scram/verifyNonce',
-                                data: { client_proof: btoa(client_proof) },
+                                data: { client_proof: btoa(client_proof), "_token": "{{ csrf_token() }}"},
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);
