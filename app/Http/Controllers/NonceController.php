@@ -41,7 +41,7 @@ class NonceController extends Controller
              * - извелечем хеш еще раз
              * - сравним с хранимым значением в БД (sha(sha(p)) ($stored_key === $sha_sha_password)
              */
-            $computer = \App::make(ScramController::class);
+            $computer = new ScramController();//'sha512','openssl',1,2
             $sha_password = $computer->compute( $server_nonce . $stored_key) ^ $client_proof;
             $sha_sha_password = $computer->hashLeftPart($sha_password);
 
@@ -85,15 +85,15 @@ class NonceController extends Controller
 
                 $password = $data['user_password'];
 
-
-                if ( \App::make(ScramController::class)->hashPassword($password) != $stored_key){
+                $computer = new ScramController();
+                if ( $computer->hashPassword($password) != $stored_key){
                     return json_encode(['status' => false, 'msg' => 'Не верный пароль'], JSON_UNESCAPED_UNICODE);
                 }
                 if (empty($user->server_nonce)) {
                     $server_nonce = $this->createNonceTo($user);
                     return json_encode(['status' => true, 'msg' => 'new nonce created, for $user_login= ' . $user_login, 'nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
                 } else {
-                    return json_encode(['status' => true, 'msg' => 'old nonce getted, for $user_login= ' . $user_login, 'nonce' => $user->server_nonce], JSON_UNESCAPED_UNICODE);
+                    return json_encode(['status' => true, 'msg' => 'old nonce received, for $user_login= ' . $user_login, 'nonce' => $user->server_nonce], JSON_UNESCAPED_UNICODE);
                 }
             } else return json_encode(['status' => false, 'msg' => 'Пользователь с логином "' . $user_login. '" не найден.'], JSON_UNESCAPED_UNICODE);
 

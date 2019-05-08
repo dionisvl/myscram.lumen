@@ -20,13 +20,13 @@ Route::get('/', function () {
 });
 
 
-Route::get('/scram/','ScramController@index');
+Route::get('/scram/','IndexController@index');
 
 Route::get('/scram/register/','UserController@register');
 Route::post('/scram/register/','UserController@register');
 
-Route::get('/scram/getnonce/','NonceController@getnonce');
-Route::post('/scram/getnonce/','NonceController@getnonce');
+Route::get('/scram/getnonce/','NonceController@getNonce');
+Route::post('/scram/getnonce/','NonceController@getNonce');
 
 Route::get('/scram/verifyNonce/','NonceController@verifyNonce');
 Route::post('/scram/verifyNonce/','NonceController@verifyNonce');

@@ -16,16 +16,44 @@
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha256.js"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha512.js"></script>
 
-                    <h3>Регистрация</h3>
-                    <form action="/scram/register" class="js_register">
+
+                    <form action="/scram/register" class="js_register" style="border: 1px solid black; padding:5px;">
+                        <h3>Регистрация</h3>
                         {{ csrf_field() }}
                         <input type="hidden" value="register" name="form_type">
                         <input type="text" placeholder="your login" name="user_login" >
-                        <input type="text" placeholder="your password" name="user_password">
+                        <input type="text" placeholder="your password" name="user_password"><br>
+
+                        <label for="algo_select"> Алгоритм хеширования: </label>
+                        <select name="algo" id="algo_select">
+                            <option disabled>Выберите алгоритм хеширования</option>
+                            <option value="sha256">SHA256</option>
+                            <option value="sha512" selected>SHA512</option>
+                            <option value="sha3">SHA3</option>
+                        </select><br>
+
+                        <label for="encrypter_select">Вычислитель хеша: </label>
+                        <select name="encrypter" id="encrypter_select">
+                            <option disabled>Выберите вычислитель хеша</option>
+                            <option value="openssl" selected>openSSL</option>
+                            <option value="hash">PHP Hash</option>
+                        </select><br>
+
+                        <label for="hashCount">Сколько раз хешировать пароль?:</label>
+                        <input type="number" id="hashCount" name="hashCount" value="2"><br>
+
+                        <label for="protocol_select">Версия протокола: </label>
+                        <select name="protocolVer" id="protocol_select">
+                            <option disabled>Выберите версию протокола</option>
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                        </select><br>
+
                         <input type="submit" class="form_submit" value="register">
                     </form>
+                    <br>
 
-                    <?/* GetNonce for debugging
+<?/* GetNonce for debugging
 <h3>GetNonce</h3>
 <form action="/scram/getnonce" class="">
     <input type="hidden" value="auth" name="form_type">
@@ -35,13 +63,39 @@
     <button type="submit" class="form_submit">GetNonce</button>
 </form>
 */?>
-                    <h3>Авторизация</h3>
-                    <form action="/scram/verifyNonce" class="js_auth">
+
+                    <form action="/scram/verifyNonce" class="js_auth" style="border: 1px solid black; padding:5px;">
+                        <h3>Авторизация</h3>
                         {{ csrf_field() }}
                         <input type="hidden" value="auth" name="form_type">
                         <input type="text" placeholder="your login" name="user_login" >
-                        <input type="text" placeholder="your password" name="user_password">
+                        <input type="text" placeholder="your password" name="user_password"><br>
 {{--                        <input type="hidden" name="client_proof" value="asdfasdf">--}}
+                        <label for="algo_select"> Алгоритм хеширования: </label>
+                        <select name="algo" id="algo_select">
+                            <option disabled>Выберите алгоритм хеширования</option>
+                            <option value="sha256">SHA256</option>
+                            <option value="sha512" selected>SHA512</option>
+                            <option value="sha3">SHA3</option>
+                        </select><br>
+
+                        <label for="encrypter_select">Вычислитель хеша: </label>
+                        <select name="encrypter" id="encrypter_select">
+                            <option disabled>Выберите вычислитель хеша</option>
+                            <option value="openssl" selected>openSSL</option>
+                            <option value="hash">PHP Hash</option>
+                        </select><br>
+
+                        <label for="hashCount">Сколько раз хешировать пароль?:</label>
+                        <input type="number" id="hashCount" name="hashCount" value="2"><br>
+
+                        <label for="protocol_select">Версия протокола: </label>
+                        <select name="protocolVer" id="protocol_select">
+                            <option disabled>Выберите версию протокола</option>
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                        </select><br>
+
                         <button type="submit" class="form_submit">Authorize</button>
                     </form>
 
@@ -74,15 +128,42 @@
                                 arr[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
                             return String.fromCharCode.apply( null, arr );
                         }
+
+                        let algo = '';
+                        let hashCount = 0;
+                        let encrypter = 'openssl';
+                        let protocolVer = 2;
+
+                        /** Функция для многократного хеширования */
+                        function hashPassword(data){
+                            var i = 0;
+                            while (i<hashCount){
+                                data = sha(data);
+                                i++;
+                            }
+                            return data;
+                        }
+
                         function sha( data ) {
                             // let favoriteAlgo = 'sha512';
                             // return eval(favoriteAlgo)(data);
+                            let favoriteAlgo = '';
+                            switch (algo) {
+                                case 'sha256':
+                                    favoriteAlgo = 'SHA-256';
+                                    break;
+                                case 'sha512':
+                                    favoriteAlgo = 'SHA-512';
+                                    break;
+                                default:
+                                    alert( 'Выбран неверный алгоритм хеширования' );
+                            }
 
-                            let favoriteAlgo = 'SHA-512';
                             let shaObj = new jsSHA(favoriteAlgo,'TEXT');
                             shaObj.update(data);
                             return shaObj.getHash("HEX");
                         }
+
 
                         $(".js_register").on('submit', function (event) {
                             event.preventDefault();
@@ -123,6 +204,10 @@
                             let form_data = t.serialize();
                             let password = t.find("input[name=user_password]").val();
 
+                            algo = t.find("#algo_select :selected").val();
+                            hashCount = parseInt(t.find("input[name=hashCount]").val(), 10);
+                            console.log('hashCount: '+hashCount);
+
                             //сначала получим серверный нонс
                             $.ajax({
                                 type: "POST",
@@ -135,20 +220,18 @@
                                             msg.innerHTML = '';
                                             msg.append(data['msg'] + ' nonce='+data['nonce']);
 
-                                            server_nonce = data['nonce'];
-                                            let client_proof = strXor(sha(password), sha(server_nonce + sha(sha(password))));
 
-                                            console.log('right_part: '+sha(server_nonce + sha(sha(password))));
+                                            server_nonce = data['nonce'];
+                                            let client_proof = strXor(sha(password), sha(server_nonce + hashPassword(password)));
+
+                                            /*
+                                            console.log('hashCount: '+hashCount);
+                                            console.log('right_part: '+sha(server_nonce + hashPassword(password)));
                                             console.log('client_proof: '+client_proof);
                                             console.log('client_proof B64: '+btoa(client_proof));
                                             console.log('server_nonce: '+server_nonce);
                                             console.log('sha(password): '+sha(password));
-                                            console.log('sha(sha(password)): '+sha(sha(password)));
-
-                                            // $('<input />').attr('type', 'hidden')
-                                            //     .attr('name', "client_proof")
-                                            //     .attr('value', client_proof)
-                                            //     .appendTo(t);
+                                            console.log('sha(sha(password)) (multi): '+hashPassword(password));*/
 
                                             form_data = form_data+'&client_proof='+btoa(client_proof);//получим свежую form_data с client_proof-ом
 
@@ -210,10 +293,19 @@
                             var server_nonce = 'empty nonce';
                             let password = 'HELLO_WORLD';
 
+                            algo = 'sha512';
+                            hashCount = 2;
                             $.ajax({
                                 type: "POST",
                                 url: '/scram/getnonce',
-                                data: { user_login: user_login, "_token": "{{ csrf_token() }}"},
+                                data: {
+                                    user_login: user_login,
+                                    "_token": "{{ csrf_token() }}",
+                                    'algo': algo,
+                                    'encrypter':encrypter,
+                                    'protocolVer':protocolVer,
+                                    'hashCount':hashCount,
+                                },
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);
@@ -237,18 +329,25 @@
                             let msg = document.getElementById('check_auth_msg');
                             msg.innerHTML = '';
                             //$client_proof = hash('sha256',$password,true) ^ hash('sha256',$server_nonce.hash('sha256',hash('sha256',$password,true)));
-                            let client_proof = strXor(sha(password), sha(server_nonce + sha(sha(password))));
+                            let client_proof = strXor(sha(password), sha(server_nonce + hashPassword(password)));
 
-                            console.log('right_part: '+sha(server_nonce + sha(sha(password))));
+                            console.log('right_part: '+sha(server_nonce + hashPassword(password)));
                             console.log('client_proof: '+client_proof);
                             console.log('client_proof B64: '+btoa(client_proof));
                             console.log('server_nonce: '+server_nonce);
                             console.log('sha(password): '+sha(password));
-                            console.log('sha(sha(password)): '+sha(sha(password)));
+                            console.log('multi-sha(password): '+hashPassword(password));
                             $.ajax({
                                 type: "POST",
                                 url: '/scram/verifyNonce',
-                                data: { client_proof: btoa(client_proof), "_token": "{{ csrf_token() }}"},
+                                data: {
+                                    client_proof: btoa(client_proof),
+                                    "_token": "{{ csrf_token() }}",
+                                    'algo': algo,
+                                    'encrypter':encrypter,
+                                    'protocolVer':protocolVer,
+                                    'hashCount':hashCount
+                                },
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);

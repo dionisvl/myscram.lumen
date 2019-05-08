@@ -3,12 +3,14 @@
 
 namespace App\Scram;
 
+use App\Scram\OpensslHash;
+use App\Scram\PhpHash;
 
 class ShaCompute
 {
-    private $favoriteAlgo = 'sha512';
-    private $favoriteEncrypt = 'hash';
-    private $protocolVersion = '1';
+    private $favoriteAlgo;
+    private $encrypter;
+    private $protocolVersion;
 
 
     /**
@@ -16,20 +18,26 @@ class ShaCompute
      * @param string $favoriteAlgo
      * @param string $favoriteEncrypt
      */
-    public function __construct(string $favoriteAlgo, string $favoriteEncrypt, $protocolVersion)
+    public function __construct(string $favoriteAlgo, string $favoriteEncrypt,  $protocolVersion)
     {
         $this->favoriteAlgo = $favoriteAlgo;
         $this->favoriteEncrypt = $favoriteEncrypt;
         $this->protocolVersion = $protocolVersion;
+
+        switch ($favoriteEncrypt) {
+            case 'openssl':
+                $this->encrypter = new OpensslHash();
+                break;
+            case 'hash':
+                $this->encrypter = new PhpHash();
+                break;
+            default:
+                throw new \RuntimeException('No hash function on this platform');
+        }
+
     }
 
     public function compute($data){
-        switch ($this->favoriteEncrypt) {
-            case 'openssl':
-                return openssl_digest($data, $this->favoriteAlgo);
-            case 'hash':
-                return hash($this->favoriteAlgo, $data);
-        }
-        throw new \RuntimeException('No hash function on this platform');
+        return ($this->encrypter)->hash($data, $this->favoriteAlgo);
     }
 }

@@ -24,20 +24,43 @@ class ScramController extends Controller
 {
     private $hashCount = '2';//2 = sha(sha($string))
 
-    /**
-     * UserController constructor.
-     */
-    public function __construct(){
-        \App::singleton(ShaCompute::class,function (){
-            return new ShaCompute('sha512','openssl','2',2);
+    public function __construct(){//$algo = 'sha512',$encrypter = 'openssl',$protocolVer = '2',$hashCount
+        /**
+         * Массив названий и их значений по-умолчанию
+         */
+        $algo = ''; $encrypter = '';$protocolVer = ''; $hashCount = '';
+        $needle_arr = [
+            'algo' => 'sha512',
+            'encrypter' => 'openssl',
+            'protocolVer' => '2',
+            'hashCount' => '2'
+        ];
+
+        $data = array_map('trim',$_REQUEST);
+
+
+
+        foreach ($needle_arr as $key => $item){
+            if (!empty($data[$key])){
+                ${$key} = $data[$key];
+            } else ${$key} = $item;
+        }
+
+        \App::singleton(ShaCompute::class,function () use ($algo, $encrypter,$protocolVer){
+            return new ShaCompute($algo,$encrypter,$protocolVer);
         });
 
-        $this->hashCount = 2;
+
+        $this->setHashCount($hashCount);
 
     }
 
-    public function index(){
-        return view('pages.index');
+    /**
+     * @param int|string $hashCount
+     */
+    public function setHashCount($hashCount): void
+    {
+        $this->hashCount = $hashCount;
     }
 
 
