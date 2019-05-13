@@ -102,25 +102,6 @@
                     <br>
                     <div id="msg">message will be here</div>
                     <script>
-                        "use strict";
-
-                        /*\
-                        |*|  Base64 / binary data / UTF-8 strings utilities (#3)
-                        |*|
-                        |*|  https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-                        \*/
-
-                        function btoaUTF16 (sString) {
-                            var aUTF16CodeUnits = new Uint16Array(sString.length);
-                            Array.prototype.forEach.call(aUTF16CodeUnits, function (el, idx, arr) { arr[idx] = sString.charCodeAt(idx); });
-                            return btoa(String.fromCharCode.apply(null, new Uint8Array(aUTF16CodeUnits.buffer)));
-                        }
-                        function atobUTF16 (sBase64) {
-                            var sBinaryString = atob(sBase64), aBinaryView = new Uint8Array(sBinaryString.length);
-                            Array.prototype.forEach.call(aBinaryView, function (el, idx, arr) { arr[idx] = sBinaryString.charCodeAt(idx); });
-                            return String.fromCharCode.apply(null, new Uint16Array(aBinaryView.buffer));
-                        }
-
                         function strXor( a, b ) {
                             let len = Math.min( a.length, b.length );
                             let arr = new Array( len );
