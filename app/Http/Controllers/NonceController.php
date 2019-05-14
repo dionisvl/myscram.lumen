@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+header("Access-Control-Allow-Origin: *");
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ScramController;
 use App\Scram\RandomString;

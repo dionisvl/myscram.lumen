@@ -374,3 +374,31 @@
     </div>
     <!-- end main content-->
 @endsection
+
+
+
+{{--// Складываем два числа удаленно--}}
+{{--let resultA, resultB, resultC;--}}
+
+{{--function get_auth_nonce(action, user_login) {--}}
+
+{{--const payload = {--}}
+{{--user_login: user_login--}}
+{{--}--}}
+
+{{--return fetch(action+'?user_login='+user_login)--}}
+
+
+{{--.then(x => x.json()--}}
+{{--);--}}
+{{--}--}}
+{{--console.log(11111111111);--}}
+
+
+{{--get_auth_nonce('http://scram/scram/getnonce', 'test_login')--}}
+{{--.then(success => {--}}
+{{--resultA = success;--}}
+{{--console.log(success.status);--}}
+{{--console.log('total: ' + success);--}}
+{{--return resultA;--}}
+{{--})--}}
