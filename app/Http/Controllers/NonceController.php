@@ -30,7 +30,7 @@ class NonceController extends Controller
             $server_nonce = $this->getNonce($user_login);  // получим нонс из последнего запроса по идентификатору
 
             $server_nonce = json_decode($server_nonce);
-            $server_nonce = $server_nonce->nonce;
+            $server_nonce = $server_nonce->server_nonce;
 
 
             $client_proof = base64_decode($data['client_proof']);
@@ -91,16 +91,16 @@ class NonceController extends Controller
                 }
                 if (empty($user->server_nonce)) {
                     $server_nonce = $this->createNonceTo($user);
-                    return json_encode(['status' => true, 'msg' => 'new nonce created, for $user_login= ' . $user_login, 'nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
+                    return json_encode(['status' => true, 'msg' => 'new nonce created, for $user_login= ' . $user_login, 'server_nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
                 } else {
-                    return json_encode(['status' => true, 'msg' => 'old nonce received, for $user_login= ' . $user_login, 'nonce' => $user->server_nonce], JSON_UNESCAPED_UNICODE);
+                    return json_encode(['status' => true, 'msg' => 'old nonce received, for $user_login= ' . $user_login, 'server_nonce' => $user->server_nonce], JSON_UNESCAPED_UNICODE);
                 }
             } else return json_encode(['status' => false, 'msg' => 'Пользователь с логином "' . $user_login. '" не найден.'], JSON_UNESCAPED_UNICODE);
 
 
         } else {
             $server_nonce = 'our_secret_nonce_from_php_server';
-            return json_encode(['status' => true, 'msg' => 'ok, $user_login= ' . $user_login, 'nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
+            return json_encode(['status' => true, 'msg' => 'ok, $user_login= ' . $user_login, 'server_nonce' => $server_nonce], JSON_UNESCAPED_UNICODE);
         }
     }
 

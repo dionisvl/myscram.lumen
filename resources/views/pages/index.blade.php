@@ -1,6 +1,9 @@
 @extends('layout')
 
 @section('content')
+{{--    //laravel blade csrf token--}}
+{{--    <meta name="csrf-token" content="{{ csrf_token() }}">--}}
+
     <!--main content start-->
     <div class="main-content">
         <div class="container">
@@ -19,7 +22,7 @@
 
                     <form action="/scram/register" class="js_register" style="border: 1px solid black; padding:5px;">
                         <h3>Регистрация</h3>
-                        {{ csrf_field() }}
+
                         <input type="hidden" value="register" name="form_type">
                         <input type="text" placeholder="your login" name="user_login" >
                         <input type="text" placeholder="your password" name="user_password"><br>
@@ -66,7 +69,7 @@
 
                     <form action="/scram/verifyNonce" class="js_auth" style="border: 1px solid black; padding:5px;">
                         <h3>Авторизация</h3>
-                        {{ csrf_field() }}
+
                         <input type="hidden" value="auth" name="form_type">
                         <input type="text" placeholder="your login" name="user_login" >
                         <input type="text" placeholder="your password" name="user_password"><br>
@@ -139,7 +142,6 @@
                                 default:
                                     alert( 'Выбран неверный алгоритм хеширования' );
                             }
-
                             let shaObj = new jsSHA(favoriteAlgo,'TEXT');
                             shaObj.update(data);
                             return shaObj.getHash("HEX");
@@ -151,60 +153,117 @@
                             let t = $(this);
                             let action = t.attr('action');
                             let msg = document.getElementById('msg');
-                            let data = t.serialize();
 
-                            $.ajax({
-                                type: "POST",
-                                url: action,
-                                data: data,
-                                success: function (response) {
-                                    try {
-                                        let data = JSON.parse(response);
-                                        if (data['status'] === true) {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg']);
+                            let user_login = t.find("input[name=user_login]").val();
+                            let user_password = t.find("input[name=user_password]").val();
+                            let algo = t.find("#algo_select :selected").val();
+                            let hashCount = parseInt(t.find("input[name=hashCount]").val(), 10);
+                            let encrypter = t.find("#encrypter_select :selected").val();
+                            let protocolVer = t.find("#protocol_select :selected").val();
 
-                                        } else {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg']);
-                                            console.log(response);
+                            let csrf_token = $("meta[name=csrf-token]").attr("content");
+
+                            function registration(action,user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token){
+                                let answer;
+
+                                $.ajax({
+                                    type: "POST",
+                                    url: action,
+                                    data: {
+                                        user_login: user_login,
+                                        user_password: user_password,
+                                        'algo': algo,
+                                        'encrypter':encrypter,
+                                        'protocolVer':protocolVer,
+                                        'hashCount':hashCount,
+                                        "_token": "{{ csrf_token() }}",
+                                        //"_token": csrf_token,
+                                    },
+                                    success: function (response) {
+                                        try {
+                                            let data = JSON.parse(response);
+                                            if (data['status'] === true) {
+                                                console.log('Ok');
+                                                answer = data['msg'];
+                                            } else {
+                                                console.log('NO Ok: '+response);
+                                                answer = data['msg'];
+                                            }
+                                        } catch (e) {
+                                            console.log('Error: '+ e);
+                                            console.log('response: '+ response);
+                                            answer = 'Error: '+ e;
                                         }
-                                    } catch (e) {
-                                        console.log('Error: '+ e);
-                                        console.log('response: '+ response);
                                     }
-                                }
-                            });
+                                });
+
+                                return answer;
+                            }
+                            msg.innerHTML = registration(user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token);
                         });
+
+
+
+
                         $(".js_auth").on('submit', function (event) {
                             event.preventDefault();
                             let t = $(this);
                             let action = t.attr('action');
                             let msg = document.getElementById('msg');
-                            var server_nonce = 'empty nonce';
-                            let form_data = t.serialize();
-                            let password = t.find("input[name=user_password]").val();
 
-                            algo = t.find("#algo_select :selected").val();
-                            hashCount = parseInt(t.find("input[name=hashCount]").val(), 10);
-                            console.log('hashCount: '+hashCount);
+                            let user_login = t.find("input[name=user_login]").val();
+                            let user_password = t.find("input[name=user_password]").val();
+                            let algo = t.find("#algo_select :selected").val();
+                            let hashCount = parseInt(t.find("input[name=hashCount]").val(), 10);
+                            let encrypter = t.find("#encrypter_select :selected").val();
+                            let protocolVer = t.find("#protocol_select :selected").val();
 
-                            //сначала получим серверный нонс
+                            let csrf_token = $("meta[name=csrf-token]").attr("content");
+                            let server_nonce = 'empty nonce';
+                            let answer = [];
+
+
+                            answer = get_auth_nonce(action,user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token);
+                            if (typeof answer['server_nonce'] === 'undefined' || answer['server_nonce'] === null) {
+                                msg.innerHTML = '';
+                                msg.innerHTML = answer['msg'];
+                            } else {
+                                msg.innerHTML = '';
+                                msg.innerHTML = answer['msg'];
+                                let check_auth_answer = check_auth(action,user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token,answer['server_nonce'],answer['client_proof']);
+                                msg.innerHTML = check_auth_answer['msg'];
+                            }
+
+
+                        });
+
+
+
+                        function get_auth_nonce(action,user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token){//сначала получим серверный нонс
+                            let answer = {};
                             $.ajax({
                                 type: "POST",
                                 url: '/scram/getnonce',
-                                data: form_data,
+                                data: {
+                                    user_login: user_login,
+                                    user_password: user_password,
+                                    'algo': algo,
+                                    'encrypter':encrypter,
+                                    'protocolVer':protocolVer,
+                                    'hashCount':hashCount,
+                                    //"_token": csrf_token,
+                                    "_token": "{{ csrf_token() }}",
+                                },
+
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);
                                         if (data['status'] === true) {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg'] + ' nonce='+data['nonce']);
-
-
-                                            server_nonce = data['nonce'];
-                                            let client_proof = strXor(sha(password), sha(server_nonce + hashPassword(password)));
-
+                                            answer.server_nonce = data['server_nonce'];
+                                            answer.msg = (data['msg'] + ' nonce='+data['server_nonce']);
+                                            answer.client_proof = btoa(strXor(sha(user_password), sha(data['server_nonce'] + hashPassword(user_password))));
+                                            // console.log(answer);
+                                            return answer;
                                             /*
                                             console.log('hashCount: '+hashCount);
                                             console.log('right_part: '+sha(server_nonce + hashPassword(password)));
@@ -212,148 +271,101 @@
                                             console.log('client_proof B64: '+btoa(client_proof));
                                             console.log('server_nonce: '+server_nonce);
                                             console.log('sha(password): '+sha(password));
-                                            console.log('sha(sha(password)) (multi): '+hashPassword(password));*/
-
-                                            form_data = form_data+'&client_proof='+btoa(client_proof);//получим свежую form_data с client_proof-ом
-
-                                            check_auth(form_data,server_nonce,msg,action);
+                                            console.log('sha(sha(password)) (multi): '+hashPassword(password));
+                                            */
                                         } else {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg']);
+                                            answer['msg'] = data['msg'];
                                             console.log(response);
                                         }
                                     } catch (e) {
-                                        console.log('Error: '+ e);
                                         console.log('response: '+ response);
+                                        answer['msg'] = 'Error: '+ e;
                                     }
                                 }
                             });
 
-                            function check_auth(form_data,server_nonce,msg,action){
-                                $.ajax({
-                                    type: "POST",
-                                    url: action,
-                                    data: form_data,
-                                    success: function (response) {
-                                        try {
-                                            let data = JSON.parse(response);
-                                            if (data['status'] === true) {
-                                                //msg.innerHTML = '';
-                                                msg.append('\n\n');
-                                                msg.append(data['msg']);
-                                            } else {
-
-                                                msg.append(data['msg']);
-                                                console.log(response);
-                                            }
-                                        } catch (e) {
-                                            console.log('Error: '+ e);
-                                            console.log('response: '+ response);
-                                        }
-                                    }
-                                });
-                            }
-
-                        });
-                    </script>
+                            // console.log(answer);
+                            return answer;
+                        }
 
 
-
-                    <h3>Тестовая проверка SCRAM авторизации одним кликом:<button id="check_auth">check auth</button></h3>
-
-                    <div id="server_nonce_msg">server nonce will be here</div>
-                    <div id="check_auth_msg">auth_msg will be here</div>
-
-
-
-                    <script>
-                        $("#check_auth").on('click',function(event) {
-                            //сначала получим server_nonce путем запроса к серверу
-                            let user_login = 'test_login';
-                            let msg = document.getElementById('server_nonce_msg');
-                            var server_nonce = 'empty nonce';
-                            let password = 'HELLO_WORLD';
-
-                            algo = 'sha512';
-                            hashCount = 2;
+                        function check_auth(action,user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token,server_nonce,client_proof){
+                            let answer;
                             $.ajax({
                                 type: "POST",
-                                url: '/scram/getnonce',
+                                url: action,
                                 data: {
                                     user_login: user_login,
-                                    "_token": "{{ csrf_token() }}",
+                                    user_password: user_password,
                                     'algo': algo,
                                     'encrypter':encrypter,
                                     'protocolVer':protocolVer,
                                     'hashCount':hashCount,
-                                },
-                                success: function (response) {
-                                    try {
-                                        let data = JSON.parse(response);
-                                        if (data['status'] === true) {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg'] + data['nonce']);
-                                            server_nonce = data['nonce'];
-                                            check_auth_fast(server_nonce,password);
-                                        } else {
-                                            console.log(response);
-                                        }
-                                    } catch (e) {
-                                        console.log(response);
-                                    }
-                                }
-                            });
-                        });
-
-                        function check_auth_fast(server_nonce,password) {
-
-                            let msg = document.getElementById('check_auth_msg');
-                            msg.innerHTML = '';
-                            //$client_proof = hash('sha256',$password,true) ^ hash('sha256',$server_nonce.hash('sha256',hash('sha256',$password,true)));
-                            let client_proof = strXor(sha(password), sha(server_nonce + hashPassword(password)));
-
-                            console.log('right_part: '+sha(server_nonce + hashPassword(password)));
-                            console.log('client_proof: '+client_proof);
-                            console.log('client_proof B64: '+btoa(client_proof));
-                            console.log('server_nonce: '+server_nonce);
-                            console.log('sha(password): '+sha(password));
-                            console.log('multi-sha(password): '+hashPassword(password));
-                            $.ajax({
-                                type: "POST",
-                                url: '/scram/verifyNonce',
-                                data: {
-                                    client_proof: btoa(client_proof),
                                     "_token": "{{ csrf_token() }}",
-                                    'algo': algo,
-                                    'encrypter':encrypter,
-                                    'protocolVer':protocolVer,
-                                    'hashCount':hashCount
+                                    'server_nonce': server_nonce,
+                                    'client_proof':client_proof
                                 },
+
+                                processData: false,
+                                contentType: false,
+                                dataType: "json",
                                 success: function (response) {
                                     try {
                                         let data = JSON.parse(response);
                                         if (data['status'] === true) {
-                                            msg.innerHTML = '';
-                                            msg.append(data['msg']);
-
+                                            console.log('Ok');
+                                            answer = data['msg'];
                                         } else {
-                                            msg.append(data['msg']);
-                                            console.log(response);
+                                            console.log('NO Ok: '+response);
+                                            answer = data['msg'];
                                         }
                                     } catch (e) {
-                                        console.log(response);
+                                        console.log('Error: '+ e);
+                                        console.log('response: '+ response);
+                                        answer = 'Error: '+ e;
                                     }
                                 }
                             });
+                            return answer;
                         }
                     </script>
 
 
 
+                    <h3>Тестовая проверка SCRAM авторизации одним кликом:<button id="check_auth_fast">check auth</button></h3>
+
+                    <div id="server_nonce_msg">server nonce will be here</div>
+                    <div id="check_auth_msg">auth_msg will be here</div>
+
+                    <script>
+                        $("#check_auth_fast").on('click',function(event) {
+                            let msg = document.getElementById('server_nonce_msg');
+                            let csrf_token = $("meta[name=csrf-token]").attr("content");
+                            let user_login = 'test_login';
+                            let user_password = 'HELLO_WORLD';
+
+                            algo = 'sha512';
+                            hashCount = 2;
+                            encrypter = 'openssl';
+                            protocolVer = 2;
+                            // console.log(csrf_token);
+
+                            let answer = get_auth_nonce('/scram/getNonce',user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token);//сначала получим server_nonce путем запроса к серверу
+                            console.log(answer);
+                            console.log(answer.msg);
 
 
-
-
+                            if (typeof answer['server_nonce'] === 'undefined' || answer['server_nonce'] === null) {
+                                msg.innerHTML = '';
+                                msg.innerHTML = answer['msg'];
+                            } else {
+                                msg.innerHTML = '';
+                                msg.innerHTML = answer['msg'];
+                                let check_auth_answer = check_auth('/scram/verifyNonce',user_login,user_password,algo,encrypter,protocolVer,hashCount,csrf_token,answer['server_nonce'],answer['client_proof']);
+                                msg.innerHTML = check_auth_answer['msg'];
+                            }
+                        });
+                    </script>
 
                 </div>
                 @include('pages._sidebar')

@@ -1,4 +1,6 @@
-# myscram.lumen
+# SCRAM(mysql) 
+##Клиент JS - сервер PHP
+
 Тестовая реализация Scram аутентификации на PHP/JS and laravel(lumen)
 1. клиент делает запрос к серверу для получения server_nonce
 2. получив snonse клиент генерирует client_proof и отправляет на сервер
