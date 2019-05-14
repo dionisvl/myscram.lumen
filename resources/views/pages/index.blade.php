@@ -365,6 +365,39 @@
                                 msg.innerHTML = check_auth_answer['msg'];
                             }
                         });
+
+
+
+
+
+                        function get_server_nonce(action, user_login) {
+                            const payload = {
+                                user_login: user_login
+                            };
+                            return fetch(action+'?user_login='+user_login)
+                                .then(x => x.json());
+                        }
+
+                        function check_auth(client_proof) {
+                            const payload = {
+                                user_login: user_login
+                            };
+                            return fetch(action+'?user_login='+user_login)
+                                .then(x => x.json());
+                        }
+
+
+
+                        get_auth_nonce('http://scram/scram/getnonce', 'test_login')
+                            .then(success => {
+                                resultA = success;
+                                console.log(success.status);
+                                console.log(success.server_nonce);
+                                return success.server_nonce;
+                            })
+                            .then(server_nonce => {
+                                check_auth(client_proof,server_nonce)
+                            })
                     </script>
 
                 </div>
@@ -377,28 +410,3 @@
 
 
 
-{{--// Складываем два числа удаленно--}}
-{{--let resultA, resultB, resultC;--}}
-
-{{--function get_auth_nonce(action, user_login) {--}}
-
-{{--const payload = {--}}
-{{--user_login: user_login--}}
-{{--}--}}
-
-{{--return fetch(action+'?user_login='+user_login)--}}
-
-
-{{--.then(x => x.json()--}}
-{{--);--}}
-{{--}--}}
-{{--console.log(11111111111);--}}
-
-
-{{--get_auth_nonce('http://scram/scram/getnonce', 'test_login')--}}
-{{--.then(success => {--}}
-{{--resultA = success;--}}
-{{--console.log(success.status);--}}
-{{--console.log('total: ' + success);--}}
-{{--return resultA;--}}
-{{--})--}}

@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bd6f5481-0dd2-49b1-b1fd-bf08e91d083f" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/NonceController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/NonceController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/views/pages/index.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/pages/index.blade.php" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,8 +18,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/resources/views/pages/index.blade.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="351">
-              <caret line="376" lean-forward="true" selection-start-line="376" selection-end-line="376" />
+            <state relative-caret-position="181">
+              <caret line="372" column="24" lean-forward="true" selection-start-line="372" selection-start-column="24" selection-end-line="393" selection-end-column="30" />
             </state>
           </provider>
         </entry>
@@ -297,6 +295,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../scramc" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
@@ -354,12 +353,12 @@
       <workItem from="1557241738238" duration="2936000" />
       <workItem from="1557297158446" duration="23378000" />
       <workItem from="1557730839468" duration="21945000" />
-      <workItem from="1557819509194" duration="8415000" />
+      <workItem from="1557819509194" duration="8689000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="161714000" />
+    <option name="totallyTimeSpent" value="161988000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-1928" y="-8" width="1936" height="1056" extended-state="6" />
@@ -604,8 +603,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/resources/views/pages/index.blade.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="351">
-          <caret line="376" lean-forward="true" selection-start-line="376" selection-end-line="376" />
+        <state relative-caret-position="181">
+          <caret line="372" column="24" lean-forward="true" selection-start-line="372" selection-start-column="24" selection-end-line="393" selection-end-column="30" />
         </state>
       </provider>
     </entry>
