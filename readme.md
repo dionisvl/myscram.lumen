@@ -1,14 +1,13 @@
-# SCRAM(mysql) 
-##Клиент JS - сервер PHP
+# SCRAM Authentication Guide (MySQL)
+## Client/Server version
 
-Тестовая реализация Scram аутентификации на PHP/JS and laravel(lumen)
-1. клиент делает запрос к серверу для получения server_nonce
-2. получив snonse клиент генерирует client_proof и отправляет на сервер
-3. сервер делает проверку авторизации на основе snonse и client_proof и отдает клинту ответ о результате проверки
+This is a test implementation of SCRAM authentication using PHP/JS and Laravel (Lumen).
 
-ps:  snonse генерируется на сервере, сохраняется в бд и удаляется сразу после попытки авторизации
+1. The client sends a request to the server to obtain the server_nonce.
+2. Upon receiving the nonce, the client generates the client_proof and sends it to the server.
+3. The server verifies the authorization based on the server_nonce and client_proof and responds to the client with the authentication result.
 
+Note: The nonce is generated on the server, stored in the database, and immediately removed after the authentication attempt.
 
-* тестовый логин для бд: test_login
-* тестовый пароль test_login, захешированный в sha256: b3e1e614c321bc20e47b0a260e3c4e3f3a91875d5e71eb2fd85b76f939412115
-(HELLO_WORLD)
+Test login for the database: test_login
+Test password: test_login, hashed with sha256: b3e1e614c321bc20e47b0a260e3c4e3f3a91875d5e71eb2fd85b76f939412115 (HELLO_WORLD)
